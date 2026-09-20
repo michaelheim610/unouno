@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO Kartenstapel</title>
+  <style>
+    :root {
+      --bg: #1c1c2e;
+      --text: #ffffff;
+      --red: #e3342f;
+      --green: #2ea44f;
+      --blue: #2f6fe3;
+      --yellow: #f5c518;
+      --black: #222222;
+      --card-w: 200px;
+      --card-h: 300px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #2c2c4a, var(--bg));
+      color: var(--text);
+      font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+      letter-spacing: 2px;
+    }
+
+    .counter {
+      font-size: 1.1rem;
+      opacity: 0.85;
+      margin-bottom: 24px;
+    }
+
+    .table {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+
+    .card {
+      width: var(--card-w);
+      height: var(--card-h);
+      border-radius: 18px;
+      border: 8px solid #ffffff;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Rückseite des Stapels */
+    .card.back {
+      background: var(--black);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .card.back:hover { transform: translateY(-4px); }
+    .card.back:active { transform: translateY(0) scale(0.98); }
+    .card.back .oval {
+      background: var(--red);
+    }
+    .card.back .oval span {
+      color: var(--yellow);
+      font-size: 3.4rem;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: 2px;
+      text-shadow: 3px 3px 0 var(--black);
+    }
+
+    .card.empty {
+      background: transparent;
+      border: 8px dashed rgba(255, 255, 255, 0.35);
+      box-shadow: none;
+      cursor: default;
+    }
+    .card.empty:hover { transform: none; }
+    .card.empty .oval { display: none; }
+
+    /* Das weiße schräge Oval in der Mitte */
+    .oval {
+      width: 78%;
+      height: 84%;
+      background: #ffffff;
+      border-radius: 50%;
+      transform: rotate(-30deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .oval span {
+      transform: rotate(30deg);
+      font-size: 6rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    /* Vorderseite der aufgedeckten Karte */
+    .card.front.red    { background: var(--red); }
+    .card.front.green  { background: var(--green); }
+    .card.front.blue   { background: var(--blue); }
+    .card.front.yellow { background: var(--yellow); }
+    .card.front.black  { background: var(--black); }
+
+    .card.front.red    .oval span { color: var(--red); }
+    .card.front.green  .oval span { color: var(--green); }
+    .card.front.blue   .oval span { color: var(--blue); }
+    .card.front.yellow .oval span { color: var(--yellow); }
+    .card.front.black  .oval span { color: var(--black); }
+
+    .card.front .corner {
+      position: absolute;
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 1.6rem;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+    }
+    .card.front .corner.tl { top: 8px; left: 12px; }
+    .card.front .corner.br { bottom: 8px; right: 12px; transform: rotate(180deg); }
+
+    /* Vier Farbfelder für die schwarzen Karten */
+    .card.front.black .oval {
+      background: conic-gradient(
+        var(--red) 0deg 90deg,
+        var(--blue) 90deg 180deg,
+        var(--yellow) 180deg 270deg,
+        var(--green) 270deg 360deg
+      );
+    }
+    .card.front.black .oval span {
+      color: #ffffff;
+      text-shadow: 3px 3px 0 var(--black);
+    }
+
+    .card.front.flip {
+      animation: flip 0.35s ease-out;
+    }
+    @keyframes flip {
+      from { transform: rotateY(90deg); opacity: 0; }
+      to   { transform: rotateY(0deg); opacity: 1; }
+    }
+
+    .placeholder {
+      width: var(--card-w);
+      height: var(--card-h);
+      border-radius: 18px;
+      border: 8px dashed rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      font-size: 1rem;
+    }
+
+    .card-name {
+      margin-top: 12px;
+      font-size: 1.3rem;
+      font-weight: 600;
+      min-height: 1.6em;
+    }
+
+    button {
+      font-size: 1.4rem;
+      font-weight: 700;
+      padding: 16px 40px;
+      border: none;
+      border-radius: 40px;
+      cursor: pointer;
+      color: #ffffff;
+      background: var(--red);
+      box-shadow: 0 6px 0 #a3231f, 0 10px 20px rgba(0, 0, 0, 0.4);
+      transition: transform 0.1s, box-shadow 0.1s;
+      margin: 8px;
+    }
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #a3231f, 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+    button.secondary {
+      background: var(--blue);
+      box-shadow: 0 6px 0 #1f4ba3, 0 10px 20px rgba(0, 0, 0, 0.4);
+      font-size: 1.1rem;
+      padding: 12px 28px;
+    }
+    button.secondary:active {
+      box-shadow: 0 2px 0 #1f4ba3, 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .done {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--yellow);
+      margin-bottom: 12px;
+    }
+
+    @media (max-width: 520px) {
+      :root { --card-w: 150px; --card-h: 225px; }
+      .oval span { font-size: 4.5rem; }
+      .card.back .oval span { font-size: 2.5rem; }
+      h1 { font-size: 1.6rem; }
+    }
+  </style>
+</head>
+<body>
+  <h1>UNO Kartenstapel</h1>
+  <div class="counter" id="counter"></div>
+
+  <div class="table">
+    <div class="card back" id="deck" title="Nächste Karte aufdecken">
+      <div class="oval"><span>UNO</span></div>
+    </div>
+    <div id="current" class="placeholder">Noch keine Karte</div>
+  </div>
+
+  <div class="card-name" id="cardName"></div>
+  <div class="done" id="done"></div>
+
+  <div>
+    <button id="drawBtn">Nächste Karte</button>
+    <button id="resetBtn" class="secondary">Neu mischen</button>
+  </div>
+
+  <script>
+    const COLORS = [
+      { key: 'red', name: 'Rot' },
+      { key: 'green', name: 'Grün' },
+      { key: 'blue', name: 'Blau' },
+      { key: 'yellow', name: 'Gelb' },
+    ];
+
+    // Baut das komplette UNO-Deck mit 108 Karten.
+    function buildDeck() {
+      const deck = [];
+      for (const color of COLORS) {
+        // Eine 0 pro Farbe
+        deck.push({ color: color.key, colorName: color.name, symbol: '0', name: '0' });
+        // 1-9 jeweils doppelt
+        for (let n = 1; n <= 9; n++) {
+          for (let i = 0; i < 2; i++) {
+            deck.push({ color: color.key, colorName: color.name, symbol: String(n), name: String(n) });
+          }
+        }
+        // Aktionskarten jeweils doppelt
+        for (let i = 0; i < 2; i++) {
+          deck.push({ color: color.key, colorName: color.name, symbol: '⊘', name: 'Aussetzen' });
+          deck.push({ color: color.key, colorName: color.name, symbol: '⇄', name: 'Richtungswechsel' });
+          deck.push({ color: color.key, colorName: color.name, symbol: '+2', name: 'Zwei ziehen' });
+        }
+      }
+      // Schwarze Karten je viermal
+      for (let i = 0; i < 4; i++) {
+        deck.push({ color: 'black', colorName: '', symbol: '', name: 'Farbwahl' });
+        deck.push({ color: 'black', colorName: '', symbol: '+4', name: 'Vier ziehen' });
+      }
+      return deck;
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    const TOTAL = 108;
+    let deck = [];
+    let drawn = 0;
+
+    const deckEl = document.getElementById('deck');
+    const currentEl = document.getElementById('current');
+    const counterEl = document.getElementById('counter');
+    const cardNameEl = document.getElementById('cardName');
+    const doneEl = document.getElementById('done');
+    const drawBtn = document.getElementById('drawBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    function updateCounter() {
+      counterEl.textContent = `Noch ${deck.length} von ${TOTAL} Karten im Stapel`;
+      if (deck.length === 0) {
+        deckEl.classList.add('empty');
+        drawBtn.disabled = true;
+        doneEl.textContent = 'Der Stapel ist leer! 🎉';
+      } else {
+        deckEl.classList.remove('empty');
+        drawBtn.disabled = false;
+        doneEl.textContent = '';
+      }
+    }
+
+    function renderCard(card) {
+      const cornerSymbol = card.symbol || '★';
+      const centerSymbol = card.symbol || '';
+      currentEl.className = `card front flip ${card.color}`;
+      currentEl.innerHTML = `
+        <div class="corner tl">${cornerSymbol}</div>
+        <div class="oval"><span>${centerSymbol}</span></div>
+        <div class="corner br">${cornerSymbol}</div>
+      `;
+      // Animation neu starten
+      void currentEl.offsetWidth;
+      cardNameEl.textContent = card.colorName ? `${card.colorName} ${card.name}` : card.name;
+    }
+
+    function drawCard() {
+      if (deck.length === 0) return;
+      const card = deck.pop();
+      drawn++;
+      renderCard(card);
+      updateCounter();
+    }
+
+    function reset() {
+      deck = shuffle(buildDeck());
+      drawn = 0;
+      currentEl.className = 'placeholder';
+      currentEl.textContent = 'Noch keine Karte';
+      cardNameEl.textContent = '';
+      updateCounter();
+    }
+
+    drawBtn.addEventListener('click', drawCard);
+    deckEl.addEventListener('click', drawCard);
+    resetBtn.addEventListener('click', reset);
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        drawCard();
+      }
+    });
+
+    reset();
+  </script>
+</body>
+</html>
